@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>PapayaFresh Admin Dashboard</title>
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport"/>
+    <link rel="icon" href="papayafresh_assets/papayalogo_notxt.png" type="image/x-icon"/>
+    <!-- Fonts and icons -->
+    <script src="assets/js/plugin/webfont/webfont.min.js"></script>
+    <script>
+      WebFont.load({
+        google: { families: ["Public Sans:300,400,500,600,700"] },
+        custom: {
+          families: [
+            "Font Awesome 5 Solid",
+            "Font Awesome 5 Regular",
+            "Font Awesome 5 Brands",
+            "simple-line-icons",
+          ],
+          urls: ["assets/css/fonts.min.css"],
+        },
+        active: function () {
+          sessionStorage.fonts = true;
+        },
+      });
+    </script>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/plugins.min.css" />
+    <link rel="stylesheet" href="assets/css/kaiadmin.min.css" />
+    <link rel="stylesheet" href="assets/css/demo.css" />
+    <script src="https://kit.fontawesome.com/e5fae76a42.js" crossorigin="anonymous"></script>
+    
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- Custom CSS for sidebar active state -->
+    <style>
+      .sidebar .nav.nav-secondary .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+
+      .sidebar .nav.nav-secondary .nav-item.active a {
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .sidebar .nav.nav-secondary .nav-item.active i {
+        color: #4CAF50;
+      }
+      
+      /* Loading spinner */
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #4CAF50;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      /* Status badges */
+      .status-badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+      }
+      
+      .status-unripe { background-color: #4CAF50; color: white; }
+      .status-partially-ripe { background-color: #8BC34A; color: white; }
+      .status-ripe { background-color: #FF9800; color: white; }
+      .status-overripe { background-color: #F44336; color: white; }
+      
+      /* Statistics cards */
+      .stat-card {
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .stat-unripe { background: linear-gradient(135deg, #4CAF50, #66BB6A); color: white; }
+      .stat-partially-ripe { background: linear-gradient(135deg, #8BC34A, #9CCC65); color: white; }
+      .stat-ripe { background: linear-gradient(135deg, #FF9800, #FFB74D); color: white; }
+      .stat-overripe { background: linear-gradient(135deg, #F44336, #EF5350); color: white; }
+      
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      /* Export button styles */
+      .export-loading {
+        opacity: 0.7;
+        pointer-events: none;
+      }
+
+      .export-success {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+      }
+
+      /* Toast notification */
+      .export-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <!--Sidebar-->
+      <div id="sidebar-container"></div>
+      <script>
+        fetch("sidebar.html")
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById("sidebar-container").innerHTML = data;
+            setActiveSidebarItem();
+          });
+      </script>
+
+      <div class="main-panel">
+        <!--Navbar-->
+        <div id="navbar-container"></div>
+        <script>
+          fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+              document.getElementById("navbar-container").innerHTML = data;
+            });
+        </script>
+
+        <div class="container">
+          <div class="page-inner">
+            <div class="d-flex align-items-center align-items-md-center flex-column pt-2 pb-4">
+              <div>
+                <h1 style="font-weight: 1000; font-size: 55px">Performance</h1>
+              </div>
+              <div class="mt-2">
+                <span id="dataStatus" class="badge bg-secondary">
+                  <span class="loading-spinner"></span> Loading scan data...
+                </span>
+              </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="stat-card stat-unripe">
+                  <i class="fas fa-leaf fa-2x"></i>
+                  <div class="stat-number" id="unripeCount">0</div>
+                  <div>Unripe Papayas</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card stat-partially-ripe">
+                  <i class="fas fa-apple-alt fa-2x"></i>
+                  <div class="stat-number" id="partiallyRipeCount">0</div>
+                  <div>Partially Ripe</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card stat-ripe">
+                  <i class="fas fa-sun fa-2x"></i>
+                  <div class="stat-number" id="ripeCount">0</div>
+                  <div>Ripe Papayas</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card stat-overripe">
+                  <i class="fas fa-exclamation-triangle fa-2x"></i>
+                  <div class="stat-number" id="overripeCount">0</div>
+                  <div>Overripe Papayas</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row">
+              <div class="col-md-8">
+                <div class="card card-round">
+                  <div class="card-header">
+                    <div class="card-head-row d-flex justify-content-between align-items-center">
+                      <div class="card-title">Papaya Scans by Ripeness (Weekly)</div>
+                      <button class="btn btn-primary btn-sm" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-container" style="min-height: 375px">
+                      <canvas id="uploadsPerWeekChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="card card-round">
+                  <div class="card-header">
+                    <div class="card-title">Ripeness Distribution</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-container" style="min-height: 375px">
+                      <canvas id="ripenessDistributionChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Scans Table -->
+            <div class="row mt-4">
+              <div class="col-md-12">
+                <div class="card card-round">
+                  <div class="card-header">
+                    <div class="card-title">Recent Papaya Scans</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <thead>
+                          <tr>
+                            <th>User Email</th>
+                            <th>Papaya Variety</th>
+                            <th>Ripeness</th>
+                            <th>Scan Date</th>
+                            <th>Temperature</th>
+                          </tr>
+                        </thead>
+                        <tbody id="recentScansTable">
+                          <tr>
+                            <td colspan="5" class="text-center">
+                              <div class="loading-spinner"></div>
+                              Loading recent scans...
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="mt-3 d-flex justify-content-end">
+              <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-download me-2"></i>Generate Report
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="exportReport('csv')">
+                      <i class="fas fa-file-csv me-2 text-success"></i>Export as CSV
+                      <small class="d-block text-muted">Comma-separated values</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="exportReport('excel')">
+                      <i class="fas fa-file-excel me-2 text-success"></i>Export as Excel
+                      <small class="d-block text-muted">Microsoft Excel format</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" onclick="exportReport('pdf')">
+                      <i class="fas fa-file-pdf me-2 text-danger"></i>Export as PDF
+                      <small class="d-block text-muted">Portable Document Format</small>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!--Footer-->
+        <div id="footer-container"></div>
+        <script>
+          fetch("footer.html")
+            .then(response => response.text())
+            .then(data => {
+              document.getElementById("footer-container").innerHTML = data;
+            });
+        </script>
+      </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="assets/js/core/popper.min.js"></script>
+    <script src="assets/js/core/bootstrap.min.js"></script>
+    <script src="assets/js/plugin/chart.js/chart.min.js"></script>
+
+    <script>
+      let allScansData = [];
+      let weeklyStats = {};
+      let refreshInterval;
+    
+      // Function to set active state in sidebar
+      function setActiveSidebarItem() {
+        const navItems = document.querySelectorAll('.nav-item a');
+        navItems.forEach(item => {
+          item.parentElement.classList.remove('active');
+          if (item.getAttribute('href') === 'performance.html') {
+            item.parentElement.classList.add('active');
+          }
+        });
+      }
+    
+      // Fetch scan data from API
+      async function fetchScanData() {
+        try {
+          updateDataStatus('loading', 'Loading scan data...');
+          
+          const response = await fetch('fetch("https://hosting-xk33.onrender.com/api/users/all")');
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          if (data.success) {
+            allScansData = data.scans;
+            updateDataStatus('success', `Loaded ${allScansData.length} scans`);
+            processScanData();
+          } else {
+            throw new Error(data.error || 'Failed to fetch scan data');
+          }
+        } catch (error) {
+          console.error('Error fetching scan data:', error);
+          updateDataStatus('error', 'Failed to load scan data: ' + error.message);
+        }
+      }
+    
+      // Process scan data and update charts
+      function processScanData() {
+        if (allScansData.length === 0) {
+          updateDataStatus('warning', 'No scan data available');
+          return;
+        }
+    
+        // Calculate ripeness statistics - USE CORRECT CLASSIFICATION
+        const ripenessStats = calculateRipenessStats(allScansData);
+        updateStatisticsCards(ripenessStats);
+        
+        // Calculate weekly data
+        weeklyStats = calculateWeeklyStats(allScansData);
+        updateCharts(ripenessStats, weeklyStats);
+        
+        // Update recent scans table
+        updateRecentScansTable(allScansData);
+      }
+    
+      // Calculate ripeness statistics - FIXED CLASSIFICATION
+      function calculateRipenessStats(scans) {
+        const stats = {
+          unripe: 0,
+          partiallyRipe: 0,
+          ripe: 0,
+          overripe: 0,
+          total: scans.length
+        };
+    
+        scans.forEach(scan => {
+          const ripeness = (scan.ripeness || '').toLowerCase().trim();
+          console.log('Scan ripeness:', ripeness); // Debug log
+          
+          // CORRECT CLASSIFICATION BASED ON predictedRipeness
+          if (ripeness.includes('unripe') || ripeness === 'green') {
+            stats.unripe++;
+          } else if (ripeness.includes('partially') || ripeness.includes('semi') || ripeness.includes('yellow-green')) {
+            stats.partiallyRipe++;
+          } else if (ripeness.includes('overripe') || ripeness.includes('rotten') || ripeness.includes('brown')) {
+            stats.overripe++;
+          } else if (ripeness.includes('ripe')) {
+            stats.ripe++;
+          } else {
+            // Default classification based on common patterns
+            if (ripeness === 'green' || ripeness === 'unripe') {
+              stats.unripe++;
+            } else if (ripeness === 'yellow-green' || ripeness === 'partially ripe') {
+              stats.partiallyRipe++;
+            } else if (ripeness === 'yellow' || ripeness === 'ripe') {
+              stats.ripe++;
+            } else if (ripeness === 'brown' || ripeness === 'overripe') {
+              stats.overripe++;
+            } else {
+              stats.ripe++; // Default to ripe if unknown
+            }
+          }
+        });
+    
+        console.log('Ripeness stats:', stats); // Debug log
+        return stats;
+      }
+    
+      // Calculate weekly statistics
+      function calculateWeeklyStats(scans) {
+        const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+        const weeklyData = {
+          labels: weeks,
+          unripe: [0, 0, 0, 0],
+          partiallyRipe: [0, 0, 0, 0],
+          ripe: [0, 0, 0, 0],
+          overripe: [0, 0, 0, 0]
+        };
+    
+        const now = new Date();
+        const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    
+        scans.forEach(scan => {
+          const scanDate = getScanDate(scan);
+          if (!scanDate) return;
+    
+          const weeksAgo = Math.floor((now - scanDate) / oneWeek);
+          if (weeksAgo >= 0 && weeksAgo < 4) {
+            const ripeness = (scan.ripeness || '').toLowerCase().trim();
+            const weekIndex = 3 - weeksAgo; // Reverse order (most recent first)
+    
+            // Use the same classification logic
+            if (ripeness.includes('unripe') || ripeness === 'green') {
+              weeklyData.unripe[weekIndex]++;
+            } else if (ripeness.includes('partially') || ripeness.includes('semi') || ripeness.includes('yellow-green')) {
+              weeklyData.partiallyRipe[weekIndex]++;
+            } else if (ripeness.includes('overripe') || ripeness.includes('rotten') || ripeness.includes('brown')) {
+              weeklyData.overripe[weekIndex]++;
+            } else if (ripeness.includes('ripe')) {
+              weeklyData.ripe[weekIndex]++;
+            } else {
+              weeklyData.ripe[weekIndex]++; // Default
+            }
+          }
+        });
+    
+        return weeklyData;
+      }
+    
+      // Helper function to get scan date - IMPROVED
+      function getScanDate(scan) {
+        try {
+          if (scan.scannedDate) {
+            if (typeof scan.scannedDate === 'string') {
+              return new Date(scan.scannedDate);
+            } else if (scan.scannedDate.toDate) {
+              return scan.scannedDate.toDate();
+            }
+          }
+          if (scan.timestamp) {
+            return new Date(scan.timestamp);
+          }
+          if (scan.harvestedDate) {
+            return new Date(scan.harvestedDate);
+          }
+          return new Date(); // Fallback to current date
+        } catch (error) {
+          console.log('Date parsing error:', error);
+          return new Date(); // Fallback to current date
+        }
+      }
+    
+      // Update statistics cards
+      function updateStatisticsCards(stats) {
+        document.getElementById('unripeCount').textContent = stats.unripe;
+        document.getElementById('partiallyRipeCount').textContent = stats.partiallyRipe;
+        document.getElementById('ripeCount').textContent = stats.ripe;
+        document.getElementById('overripeCount').textContent = stats.overripe;
+      }
+    
+      // Update charts
+      function updateCharts(ripenessStats, weeklyStats) {
+        updateWeeklyChart(weeklyStats);
+        updateDistributionChart(ripenessStats);
+      }
+    
+      // Update weekly bar chart
+      function updateWeeklyChart(weeklyStats) {
+        const ctx = document.getElementById('uploadsPerWeekChart').getContext('2d');
+        
+        // Destroy existing chart if it exists
+        if (window.weeklyChart) {
+          window.weeklyChart.destroy();
+        }
+    
+        window.weeklyChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: weeklyStats.labels,
+            datasets: [
+              {
+                label: 'Unripe',
+                data: weeklyStats.unripe,
+                backgroundColor: '#4CAF50',
+                borderColor: '#4CAF50',
+                borderWidth: 1
+              },
+              {
+                label: 'Partially Ripe',
+                data: weeklyStats.partiallyRipe,
+                backgroundColor: '#8BC34A',
+                borderColor: '#8BC34A',
+                borderWidth: 1
+              },
+              {
+                label: 'Ripe',
+                data: weeklyStats.ripe,
+                backgroundColor: '#FF9800',
+                borderColor: '#FF9800',
+                borderWidth: 1
+              },
+              {
+                label: 'Overripe',
+                data: weeklyStats.overripe,
+                backgroundColor: '#F44336',
+                borderColor: '#F44336',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: {
+                position: 'top',
+              },
+              title: {
+                display: true,
+                text: 'Papaya Scans by Ripeness Level (Last 4 Weeks)'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Scans'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Weeks'
+                }
+              }
+            }
+          }
+        });
+      }
+    
+      // Update distribution pie chart
+      // Alternative: Dynamic chart sizing
+function updateDistributionChart(stats) {
+    const ctx = document.getElementById('ripenessDistributionChart').getContext('2d');
+    const container = ctx.canvas.parentElement;
+    
+    // Set canvas dimensions based on container
+    ctx.canvas.width = container.clientWidth;
+    ctx.canvas.height = container.clientHeight;
+    
+    // Destroy existing chart if it exists
+    if (window.distributionChart) {
+        window.distributionChart.destroy();
+    }
+
+    window.distributionChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Unripe', 'Partially Ripe', 'Ripe', 'Overripe'],
+            datasets: [{
+                data: [stats.unripe, stats.partiallyRipe, stats.ripe, stats.overripe],
+                backgroundColor: [
+                    '#4CAF50',
+                    '#8BC34A',
+                    '#FF9800',
+                    '#F44336'
+                ],
+                borderWidth: 3,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 11
+                        },
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Overall Ripeness Distribution',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 20
+                    }
+                }
+            },
+            cutout: '0%', // Solid pie chart (walay center nga empty)
+            radius: '80%' // Gamiton ang 80% sa available space
+        }
+    });
+}
+    
+      // Update recent scans table
+      function updateRecentScansTable(scans) {
+        const tableBody = document.getElementById('recentScansTable');
+        const recentScans = scans.slice(0, 10); // Already sorted by date from server
+    
+        if (recentScans.length === 0) {
+          tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No scan data available</td></tr>';
+          return;
+        }
+    
+        tableBody.innerHTML = recentScans.map(scan => `
+          <tr>
+            <td>${scan.userEmail || 'Unknown User'}</td>
+            <td>${scan.variety || 'Unknown Variety'}</td>
+            <td>
+              <span class="status-badge ${getRipenessClass(scan.ripeness)}">
+                ${scan.ripeness || 'Unknown'}
+                ${scan.predictionConfidence ? ` (${Math.round(scan.predictionConfidence * 100)}%)` : ''}
+              </span>
+            </td>
+            <td>${formatDate(getScanDate(scan))}</td>
+            <td>${scan.temperature ? scan.temperature + '°C' : 'N/A'}</td>
+          </tr>
+        `).join('');
+      }
+    
+      // Get CSS class for ripeness badge - IMPROVED
+      function getRipenessClass(ripeness) {
+        if (!ripeness) return 'status-unripe';
+        
+        const ripenessLower = ripeness.toLowerCase();
+        if (ripenessLower.includes('unripe') || ripenessLower === 'green') {
+          return 'status-unripe';
+        } else if (ripenessLower.includes('partially') || ripenessLower.includes('semi') || ripenessLower.includes('yellow-green')) {
+          return 'status-partially-ripe';
+        } else if (ripenessLower.includes('overripe') || ripenessLower.includes('rotten') || ripenessLower.includes('brown')) {
+          return 'status-overripe';
+        } else if (ripenessLower.includes('ripe')) {
+          return 'status-ripe';
+        } else {
+          return 'status-ripe'; // Default to ripe
+        }
+      }
+    
+      // Format date for display
+      function formatDate(date) {
+        if (!date) return 'Unknown';
+        try {
+          return new Date(date).toLocaleDateString() + ' ' + new Date(date).toLocaleTimeString();
+        } catch (error) {
+          return 'Invalid Date';
+        }
+      }
+    
+      // Update data status
+      function updateDataStatus(status, message) {
+        const statusElement = document.getElementById('dataStatus');
+        const badgeClass = {
+          loading: 'bg-secondary',
+          success: 'bg-success',
+          error: 'bg-danger',
+          warning: 'bg-warning'
+        }[status];
+    
+        statusElement.className = `badge ${badgeClass}`;
+        statusElement.innerHTML = status === 'loading' 
+          ? `<span class="loading-spinner"></span> ${message}`
+          : message;
+      }
+    
+      // Refresh data
+      function refreshData() {
+        fetchScanData();
+      }
+    
+      // Auto-refresh every 30 seconds for real-time updates
+      function startAutoRefresh() {
+        refreshInterval = setInterval(fetchScanData, 30000); // 30 seconds
+      }
+
+      // EXPORT FUNCTIONALITY - IMPROVED
+      // Export report function
+      async function exportReport(type) {
+          if (allScansData.length === 0) {
+              alert('No data available to export');
+              return;
+          }
+
+          try {
+              // Show loading state
+              const exportBtn = document.querySelector('#exportDropdown');
+              const originalText = exportBtn.innerHTML;
+              exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+              exportBtn.disabled = true;
+
+              let blob;
+              let filename;
+              const timestamp = new Date().toISOString().slice(0, 10);
+
+              switch (type) {
+                  case 'csv':
+                      const csvData = convertToCSV(allScansData);
+                      blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+                      filename = `papaya-performance-report-${timestamp}.csv`;
+                      break;
+
+                  case 'excel':
+                      const excelData = await convertToExcel(allScansData);
+                      blob = new Blob([excelData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                      filename = `papaya-performance-report-${timestamp}.xlsx`;
+                      break;
+
+                  case 'pdf':
+                      await generatePDF(allScansData, timestamp);
+                      return; // PDF generation handles download internally
+
+                  default:
+                      throw new Error('Unsupported export type');
+              }
+
+              // Download the file
+              downloadFile(blob, filename);
+              
+              // Show success message
+              showExportSuccess(type);
+
+          } catch (error) {
+              console.error('Export error:', error);
+              alert('Error generating report: ' + error.message);
+          } finally {
+              // Restore button state
+              const exportBtn = document.querySelector('#exportDropdown');
+              exportBtn.innerHTML = '<i class="fas fa-download me-2"></i>Generate Report';
+              exportBtn.disabled = false;
+          }
+      }
+
+      // Convert data to CSV format
+      function convertToCSV(data) {
+          if (!data.length) return '';
+          
+          const headers = ['User Email', 'Papaya Variety', 'Ripeness', 'Prediction Confidence', 'Scan Date', 'Temperature', 'Location'];
+          
+          // CSV header
+          let csv = headers.join(',') + '\n';
+          
+          // CSV rows
+          data.forEach(scan => {
+              const row = [
+                  `"${(scan.userEmail || 'Unknown').replace(/"/g, '""')}"`,
+                  `"${(scan.variety || 'Unknown').replace(/"/g, '""')}"`,
+                  `"${(scan.ripeness || 'Unknown').replace(/"/g, '""')}"`,
+                  scan.predictionConfidence ? Math.round(scan.predictionConfidence * 100) + '%' : 'N/A',
+                  `"${formatDate(getScanDate(scan))}"`,
+                  scan.temperature ? scan.temperature + '°C' : 'N/A',
+                  `"${(scan.location || 'N/A').replace(/"/g, '""')}"`
+              ];
+              csv += row.join(',') + '\n';
+          });
+          
+          return csv;
+      }
+
+      // Convert data to Excel format
+      async function convertToExcel(data) {
+          // Create workbook
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet('Papaya Performance Report');
+          
+          // Add headers
+          worksheet.columns = [
+              { header: 'User Email', key: 'email', width: 25 },
+              { header: 'Papaya Variety', key: 'variety', width: 20 },
+              { header: 'Ripeness', key: 'ripeness', width: 15 },
+              { header: 'Confidence', key: 'confidence', width: 12 },
+              { header: 'Scan Date', key: 'date', width: 20 },
+              { header: 'Temperature', key: 'temperature', width: 12 },
+              { header: 'Location', key: 'location', width: 20 }
+          ];
+          
+          // Style header row
+          worksheet.getRow(1).font = { bold: true };
+          worksheet.getRow(1).fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FF4CAF50' }
+          };
+          worksheet.getRow(1).font = { color: { argb: 'FFFFFFFF' }, bold: true };
+          
+          // Add data rows
+          data.forEach(scan => {
+              worksheet.addRow({
+                  email: scan.userEmail || 'Unknown',
+                  variety: scan.variety || 'Unknown',
+                  ripeness: scan.ripeness || 'Unknown',
+                  confidence: scan.predictionConfidence ? Math.round(scan.predictionConfidence * 100) + '%' : 'N/A',
+                  date: formatDate(getScanDate(scan)),
+                  temperature: scan.temperature ? scan.temperature + '°C' : 'N/A',
+                  location: scan.location || 'N/A'
+              });
+          });
+          
+          // Add summary sheet
+          const summarySheet = workbook.addWorksheet('Summary');
+          const stats = calculateRipenessStats(data);
+          
+          summarySheet.columns = [
+              { header: 'Metric', key: 'metric', width: 20 },
+              { header: 'Value', key: 'value', width: 15 }
+          ];
+          
+          summarySheet.addRow({ metric: 'Total Scans', value: stats.total });
+          summarySheet.addRow({ metric: 'Unripe Papayas', value: stats.unripe });
+          summarySheet.addRow({ metric: 'Partially Ripe', value: stats.partiallyRipe });
+          summarySheet.addRow({ metric: 'Ripe Papayas', value: stats.ripe });
+          summarySheet.addRow({ metric: 'Overripe Papayas', value: stats.overripe });
+          
+          // Generate Excel file
+          const buffer = await workbook.xlsx.writeBuffer();
+          return buffer;
+      }
+
+      // Generate PDF report
+      async function generatePDF(data, timestamp) {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          
+          // Add title
+          doc.setFontSize(20);
+          doc.setTextColor(76, 175, 80); // Green color
+          doc.text('PapayaFresh Performance Report', 20, 30);
+          
+          doc.setFontSize(12);
+          doc.setTextColor(0, 0, 0); // Black color
+          doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+          doc.text(`Total Scans: ${data.length}`, 20, 55);
+          
+          // Add summary statistics
+          const stats = calculateRipenessStats(data);
+          let yPosition = 75;
+          
+          doc.setFontSize(14);
+          doc.text('Summary Statistics', 20, yPosition);
+          yPosition += 15;
+          
+          doc.setFontSize(10);
+          doc.text(`• Unripe Papayas: ${stats.unripe}`, 25, yPosition);
+          yPosition += 8;
+          doc.text(`• Partially Ripe: ${stats.partiallyRipe}`, 25, yPosition);
+          yPosition += 8;
+          doc.text(`• Ripe Papayas: ${stats.ripe}`, 25, yPosition);
+          yPosition += 8;
+          doc.text(`• Overripe Papayas: ${stats.overripe}`, 25, yPosition);
+          yPosition += 15;
+          
+          // Add recent scans table
+          doc.setFontSize(14);
+          doc.text('Recent Scans (First 20 records)', 20, yPosition);
+          yPosition += 10;
+          
+          // Table headers
+          const headers = ['Email', 'Variety', 'Ripeness', 'Date'];
+          let xPosition = 20;
+          
+          doc.setFontSize(8);
+          headers.forEach(header => {
+              doc.text(header, xPosition, yPosition);
+              xPosition += 45;
+          });
+          
+          yPosition += 5;
+          doc.line(20, yPosition, 190, yPosition); // Horizontal line
+          yPosition += 8;
+          
+          // Table data (first 20 records)
+          const recentData = data.slice(0, 20);
+          recentData.forEach((scan, index) => {
+              if (yPosition > 270) { // Add new page if needed
+                  doc.addPage();
+                  yPosition = 20;
+              }
+              
+              xPosition = 20;
+              const rowData = [
+                  (scan.userEmail || 'Unknown').substring(0, 15),
+                  (scan.variety || 'Unknown').substring(0, 12),
+                  (scan.ripeness || 'Unknown').substring(0, 12),
+                  formatDate(getScanDate(scan)).substring(0, 10)
+              ];
+              
+              rowData.forEach(cell => {
+                  doc.text(cell, xPosition, yPosition);
+                  xPosition += 45;
+              });
+              
+              yPosition += 8;
+          });
+          
+          // Save PDF
+          doc.save(`papaya-performance-report-${timestamp}.pdf`);
+      }
+
+      // Download file utility function
+      function downloadFile(blob, filename) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+      }
+
+      // Show export success message
+      function showExportSuccess(type) {
+          const toast = document.createElement('div');
+          toast.className = 'alert alert-success alert-dismissible fade show position-fixed';
+          toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+          toast.innerHTML = `
+              <strong>Success!</strong> ${type.toUpperCase()} report generated successfully.
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          `;
+          document.body.appendChild(toast);
+          
+          // Auto remove after 5 seconds
+          setTimeout(() => {
+              if (toast.parentNode) {
+                  toast.remove();
+              }
+          }, 5000);
+      }
+    
+      // Initialize page
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(setActiveSidebarItem, 100);
+        fetchScanData();
+        startAutoRefresh(); // Start auto-refresh for real-time updates
+      });
+    
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', function() {
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+        }
+      });
+    </script>
+  </body>
+</html>

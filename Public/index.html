@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>PapayaFresh Admin Dashboard</title>
+    <meta content="width=device-width, initial-scale=1.0, shrink-to-fit=no" name="viewport"/>
+    <link rel="icon" href="papayafresh_assets/papayalogo_notxt.png" type="image/x-icon"/>
+    <!-- Fonts and icons -->
+    <script src="assets/js/plugin/webfont/webfont.min.js"></script>
+    <script>
+      WebFont.load({
+        google: { families: ["Public Sans:300,400,500,600,700"] },
+        custom: {
+          families: [
+            "Font Awesome 5 Solid",
+            "Font Awesome 5 Regular",
+            "Font Awesome 5 Brands",
+            "simple-line-icons",
+          ],
+          urls: ["assets/css/fonts.min.css"],
+        },
+        active: function () {
+          sessionStorage.fonts = true;
+        },
+      });
+    </script>
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/plugins.min.css" />
+    <link rel="stylesheet" href="assets/css/kaiadmin.min.css" />
+    <link rel="stylesheet" href="assets/css/demo.css" />
+    <script src="https://kit.fontawesome.com/e5fae76a42.js" crossorigin="anonymous"></script>
+    
+    <!-- Auto Update Styles -->
+    <style>
+      /* Smooth transitions for updated values */
+      .card-title, .numbers h4 {
+        transition: all 0.5s ease-in-out;
+      }
+      
+      .value-updated {
+        animation: pulseHighlight 1s ease-in-out;
+      }
+      
+      @keyframes pulseHighlight {
+        0% { background-color: transparent; }
+        50% { background-color: rgba(76, 175, 80, 0.2); }
+        100% { background-color: transparent; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <!--Sidebar-->
+      <div id="sidebar-container"></div>
+      <script>
+        fetch("sidebar.html")
+          .then(response => response.text())
+          .then(data => {
+            document.getElementById("sidebar-container").innerHTML = data;
+          });
+      </script>
+      
+      <div class="main-panel">
+        <!--Navbar-->
+        <div id="navbar-container"></div>
+        <script>
+          fetch("navbar.html")
+            .then(response => response.text())
+            .then(data => {
+              document.getElementById("navbar-container").innerHTML = data;
+            });
+        </script>
+        
+        <div class="container">
+          <div class="page-inner">
+            <!-- Dashboard Header -->
+            <div class="d-flex align-items-center flex-column pt-2 pb-4">
+              <h1 style="font-weight: 1000; font-size: 55px">Dashboard</h1>
+            </div>
+        
+            <!-- Top Stats Cards -->
+            <div class="row">
+              <!-- Total Users -->
+              <div class="col-sm-6 col-md-3">
+                <div class="card card-stats card-round">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-icon">
+                        <div class="icon-big text-center icon-primary bubble-shadow-small">
+                          <i class="fas fa-users"></i>
+                        </div>
+                      </div>
+                      <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                          <p class="card-category">Total Users</p>
+                          <h4 class="card-title" id="totalUsers">6</h4>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+        
+              <!-- New Users -->
+              <div class="col-sm-6 col-md-3">
+                <div class="card card-stats card-round">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-icon">
+                        <div class="icon-big text-center icon-info bubble-shadow-small">
+                          <i class="fas fa-user-check"></i>
+                        </div>
+                      </div>
+                      <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                          <p class="card-category">New Users</p>
+                          <h4 class="card-title" id="newUsers">2</h4>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+        
+              <!-- Overall Scans -->
+              <div class="col-sm-6 col-md-3">
+                <div class="card card-stats card-round">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-icon">
+                        <div class="icon-big text-center icon-success bubble-shadow-small">
+                          <i class="fa-solid fa-mobile-screen"></i>
+                        </div>
+                      </div>
+                      <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                          <p class="card-category">Overall Scans</p>
+                          <h4 class="card-title" id="totalScans">12</h4>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+        
+              <!-- Papayas on Shelf -->
+              <div class="col-sm-6 col-md-3">
+                <div class="card card-stats card-round">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-icon">
+                        <div class="icon-big text-center icon-secondary bubble-shadow-small">
+                          <i class="far fa-check-circle"></i>
+                        </div>
+                      </div>
+                      <div class="col col-stats ms-3 ms-sm-0">
+                        <div class="numbers">
+                          <p class="card-category">Papayas on Shelf</p>
+                          <h4 class="card-title" id="papayasOnShelf">12</h4>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        
+            <!-- Charts Row -->
+            <div class="row">
+              <!-- User Engagement Chart -->
+              <div class="col-md-12">
+                <div class="card card-round">
+                  <div class="card-header">
+                    <div class="card-title">User Engagement & Growth</div>
+                  </div>
+                  <div class="card-body">
+                    <div class="chart-container" style="min-height: 522px">
+                      <canvas id="statisticsChart"></canvas>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!--Footer-->
+        <div id="footer-container"></div>
+        <script>
+          fetch("footer.html")
+            .then(response => response.text())
+            .then(data => {
+              document.getElementById("footer-container").innerHTML = data;
+            });
+        </script>
+      </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="assets/js/core/popper.min.js"></script>
+    <script src="assets/js/core/bootstrap.min.js"></script>
+    <script src="assets/js/plugin/chart.js/chart.min.js"></script>
+
+    <!-- Auto Update Script -->
+    <script>
+      class DashboardAutoUpdater {
+        constructor() {
+          this.baseUrl = "https://hosting-xk33.onrender.com/api"; // FIXED
+          this.updateInterval = 30000; // 30 seconds
+          this.isUpdating = false;
+          this.lastData = null;
+          this.updateTimer = null;
+          this.init();
+        }
+    
+        init() {
+          console.log("🚀 Dashboard Auto-Updater initialized");
+          this.loadInitialData();
+          this.startAutoUpdate();
+        }
+    
+        async loadInitialData() {
+          try {
+            const stats = await this.fetchDashboardStats();
+            if (stats) {
+              this.lastData = stats;
+              this.updateDashboard(stats);
+            }
+          } catch (error) {
+            console.error("Error loading initial data:", error);
+          }
+        }
+    
+        async fetchDashboardStats() {
+          try {
+            const response = await fetch(`${this.baseUrl}/dashboard/stats`); // FIXED
+    
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            return data;
+    
+          } catch (error) {
+            console.error("❌ Error fetching dashboard stats:", error);
+            return null;
+          }
+        }
+    
+        startAutoUpdate() {
+          this.updateTimer = setInterval(() => {
+            this.autoUpdate();
+          }, this.updateInterval);
+        }
+    
+        async autoUpdate() {
+          if (this.isUpdating) return;
+    
+          this.isUpdating = true;
+    
+          try {
+            const newStats = await this.fetchDashboardStats();
+            if (newStats) {
+              this.detectChangesAndUpdate(this.lastData, newStats);
+              this.lastData = newStats;
+            }
+          } catch (error) {
+            console.error("Error during auto-update:", error);
+          } finally {
+            this.isUpdating = false;
+          }
+        }
+    
+        detectChangesAndUpdate(oldData, newData) {
+          if (!oldData) {
+            this.updateDashboard(newData);
+            return;
+          }
+    
+          const changes = {};
+    
+          if (oldData.totalUsers !== newData.totalUsers)
+            changes.totalUsers = newData.totalUsers;
+    
+          if (oldData.newUsers !== newData.newUsers)
+            changes.newUsers = newData.newUsers;
+    
+          if (oldData.totalScans !== newData.totalScans)
+            changes.totalScans = newData.totalScans;
+    
+          if (oldData.papayasOnShelf !== newData.papayasOnShelf)
+            changes.papayasOnShelf = newData.papayasOnShelf;
+    
+          if (Object.keys(changes).length > 0) {
+            console.log("🔄 Changes detected:", changes);
+            this.updateDashboard(newData, changes);
+          }
+        }
+    
+        updateDashboard(stats, changes = null) {
+          this.updateStatCard("totalUsers", stats.totalUsers || 0, changes?.totalUsers);
+          this.updateStatCard("newUsers", stats.newUsers || 0, changes?.newUsers);
+          this.updateStatCard("totalScans", stats.totalScans || 0, changes?.totalScans);
+          this.updateStatCard("papayasOnShelf", stats.papayasOnShelf || 0, changes?.papayasOnShelf);
+    
+          this.updateCharts(stats);
+        }
+    
+        updateStatCard(elementId, newValue, hasChanged) {
+          const element = document.getElementById(elementId);
+          if (element) {
+            const oldValue = parseInt(element.textContent) || 0;
+    
+            if (oldValue !== newValue) {
+              element.classList.add("value-updated");
+    
+              this.animateValue(element, oldValue, newValue, 1000);
+    
+              setTimeout(() => {
+                element.classList.remove("value-updated");
+              }, 1000);
+            } else {
+              element.textContent = newValue;
+            }
+          }
+        }
+    
+        animateValue(element, start, end, duration) {
+          let startTimestamp = null;
+          const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = value;
+            if (progress < 1) {
+              window.requestAnimationFrame(step);
+            }
+          };
+          window.requestAnimationFrame(step);
+        }
+    
+        updateCharts(stats) {
+          console.log("📈 Charts updated:", stats);
+        }
+    
+        destroy() {
+          if (this.updateTimer) {
+            clearInterval(this.updateTimer);
+          }
+        }
+      }
+    
+      document.addEventListener("DOMContentLoaded", function () {
+        window.dashboardUpdater = new DashboardAutoUpdater();
+    
+        const ctx1 = document.getElementById("statisticsChart").getContext("2d");
+    
+        if (window.statisticsChartInstance) {
+          window.statisticsChartInstance.destroy();
+        }
+    
+        window.statisticsChartInstance = new Chart(ctx1, {
+          type: "line",
+          data: {
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [{
+              label: "Number of Scans",
+              data: [12, 19, 8, 15, 22, 30, 25],
+              borderColor: "#4CAF50",
+              backgroundColor: "rgba(76, 175, 80, 0.2)",
+              tension: 0.4,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: true, text: "Weekly Scan Frequency" }
+            }
+          }
+        });
+    
+        window.addEventListener("beforeunload", function () {
+          if (window.dashboardUpdater) {
+            window.dashboardUpdater.destroy();
+          }
+        });
+      });
+    </script>
+    
+    </script>
+  </body>
+</html>
